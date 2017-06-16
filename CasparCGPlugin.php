@@ -8,13 +8,14 @@ use ManiaControl\Callbacks\CallbackListener;
 use ManiaControl\Callbacks\Callbacks;
 use ManiaControl\Callbacks\Structures\TrackMania\OnScoresStructure;
 use ManiaControl\Callbacks\Structures\TrackMania\OnWayPointEventStructure;
+use ManiaControl\Callbacks\TimerListener;
 use ManiaControl\Logger;
 use ManiaControl\ManiaControl;
 use ManiaControl\Plugins\Plugin;
 use ManiaControl\Settings\Setting;
 use ManiaControl\Settings\SettingManager;
 
-class CasparCGPlugin implements CallbackListener, Plugin {
+class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
 
     /*
     * Constants
@@ -28,8 +29,6 @@ class CasparCGPlugin implements CallbackListener, Plugin {
     const SETTING_CASPARCG_ACTIVATED = 'CasparCG-Plugin Activated';
     const SETTING_CASPARCG_ACTIONSFILE = 'CasparCG-Plugin Actions File';
 
-    const DEFAULT_MATCH_PLUGIN = 'Drakonia\MatchPlugin';
-
     /** @var ManiaControl $maniaControl */
     private $maniaControl         = null;
     private $socket = false;
@@ -40,8 +39,10 @@ class CasparCGPlugin implements CallbackListener, Plugin {
     private $firstfinish = true;
     private $sent = false;
     private $actionsfile = array();
-    public $matchPlugin = "";
     private $lastresults = array();
+    private $matchpoints = 200;
+    private $matchStarted = false;
+    private $nbCheckpoints = 0;
 
     public function __construct() {
         $this->address = "127.0.0.1";
@@ -107,13 +108,13 @@ class CasparCGPlugin implements CallbackListener, Plugin {
         // Callbacks
 
         $this->maniaControl->getCallbackManager()->registerCallbackListener(SettingManager::CB_SETTING_CHANGED, $this, 'updateSettings');
-        $this->matchPlugin = $this->maniaControl->getPluginManager()->getPlugin(self::DEFAULT_MATCH_PLUGIN);
 
         $this->maniaControl->getCallbackManager()->registerCallbackListener(Callbacks::MP_STARTROUNDSTART, $this, 'handleBeginRoundCallback');
         $this->maniaControl->getCallbackManager()->registerCallbackListener(Callbacks::TM_ONFINISHLINE, $this, 'handleFinishCallback');
         $this->maniaControl->getCallbackManager()->registerCallbackListener(Callbacks::BEGINMAP, $this, 'handleBeginMapCallback');
         $this->maniaControl->getCallbackManager()->registerCallbackListener(Callbacks::MP_WARMUP_START, $this, 'handleBeginWarmUpCallback');
         $this->maniaControl->getCallbackManager()->registerCallbackListener(Callbacks::TM_SCORES, $this, 'handleEndRoundCallback');
+        $this->maniaControl->getCallbackManager()->registerCallbackListener(Callbacks::TM_ONWAYPOINT, $this, 'handleCheckpointCallback');
 
 
         $this->init();
@@ -163,40 +164,71 @@ class CasparCGPlugin implements CallbackListener, Plugin {
     }
 
 
+    public function handleBeginMapCallback()
+    {
+        if($this->maniaControl->getClient()->getModeScriptInfo()->name == "Cup.Script.txt")
+        {
+            $this->matchStarted = true;
+            $this->sendActiontoCASPARCG("BeginMap");
+        }else{
+            $this->matchStarted = false;
+        }
+        $map = $this->maniaControl->getMapManager()->getCurrentMap();
+        $this->nbCheckpoints = $map->nbCheckpoints;
+    }
+
     public function handleBeginRoundCallback()
     {
-        $this->firstfinish = true;
-        $this->sent = true;
-        $this->sendActiontoCASPARCG("BeginRound");
+        if ($this->matchStarted) {
+            $this->firstfinish = true;
+            $this->sent = true;
+            $this->sendActiontoCASPARCG("Rouge");
+            $this->maniaControl->getTimerManager()->registerOneTimeListening($this, function () use (&$player) {
+                $this->sendActiontoCASPARCG("Orange");
+            }, 1000);
+            $this->maniaControl->getTimerManager()->registerOneTimeListening($this, function () use (&$player) {
+                $this->sendActiontoCASPARCG("Vert");
+            }, 1000);
+        }
+    }
+
+    public function handleCheckpointCallback(OnWayPointEventStructure $structure)
+    {
+        if ($this->matchStarted) {
+
+            $currentCheckpoint = ($structure->getCheckPointInRace() + 1);
+            $percentage = ($currentCheckpoint / $this->nbCheckpoints);
+            $login = $structure->getLogin();
+            $this->sendActiontoCASPARCG("Checkpoint");
+        }
     }
 
     public function handleFinishCallback(OnWayPointEventStructure $structure)
     {
-        $finalist = false;
-        $winner = false;
-        if($this->firstfinish) {
-            // Send packet only for the 1st finish
-            $this->firstfinish = false;
+        if ($this->matchStarted) {
+            $finalist = false;
+            $winner = false;
+            if ($this->firstfinish) {
+                // Send packet only for the 1st finish
+                $this->firstfinish = false;
 
 
-            $player = $structure->getPlayer();
+                $player = $structure->getPlayer();
 
-            if($this->lastresults[$player->login] == "Finalist")
-            {
-                $winner = true;
-            }
+                if ($this->lastresults[$player->login] == "Finalist") {
+                    $winner = true;
+                }
 
-            if($this->sent)
-            {
-                if ($action = $this->actionsfile['FinishRound'] && !$winner)
-                {
-                    $this->sendActiontoCASPARCG("FinishRound");
-                }elseif($finalist && !$winner){
-                    //$this->sendActiontoCASPARCG("Finalist");
-                    //$this->sent = false;
-                }elseif($winner){
-                    $this->sendActiontoCASPARCG("Winner");
-                    $this->sent = false;
+                if ($this->sent) {
+                    if ($action = $this->actionsfile['FinishRound'] && !$winner) {
+                        $this->sendActiontoCASPARCG("FinishRound");
+                    } elseif ($finalist && !$winner) {
+                        //$this->sendActiontoCASPARCG("Finalist");
+                        //$this->sent = false;
+                    } elseif ($winner) {
+                        $this->sendActiontoCASPARCG("Winner");
+                        $this->sent = false;
+                    }
                 }
             }
         }
@@ -208,28 +240,26 @@ class CasparCGPlugin implements CallbackListener, Plugin {
 
     public function handleEndRoundCallback(OnScoresStructure $structure)
     {
-        $results = $structure->getPlayerScores();
-        //$this->lastresults = array();
-        foreach ($results as $result) {
-            if ($result->getPlayer()->isSpectator) {
+        if($structure->getSection() == "EndRound" AND $this->matchStarted) {
+            $results = $structure->getPlayerScores();
+            //$this->lastresults = array();
+            foreach ($results as $result) {
+                if ($result->getPlayer()->isSpectator) {
 
-            } else {
-                $login = $result->getPlayer()->login;
-                $points = $result->getMatchPoints();
-                if ($this->matchPlugin) {
-                    $matchSettings = $this->matchPlugin->getMatchSettings();
-                    if ($matchSettings['S_PointsLimit'] == $points)
-                    {
+                } else {
+                    $login = $result->getPlayer()->login;
+                    $points = $result->getMatchPoints();
+
+
+                    if ($this->matchpoints == $points) {
                         $this->lastresults[$login] = "Finalist";
                         $this->sendActiontoCASPARCG("Finalist");
-                    }elseif($matchSettings['S_PointsLimit'] < $points)
-                    {
+                    } elseif ($this->matchpoints < $points) {
                         $this->lastresults[$login] = "Winner";
-                    }else{
+                    } else {
                         $this->lastresults[$login] = $points;
                     }
-                } else {
-                    $this->lastresults[$login] = $points;
+
                 }
             }
         }
