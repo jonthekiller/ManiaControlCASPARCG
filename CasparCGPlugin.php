@@ -152,12 +152,25 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
         //var_dump($this->actionsfile);
     }
 
-    public function sendActiontoCASPARCG($actionname)
+    public function sendActiontoCASPARCG($actionname,$variable = null)
     {
         if ($action = $this->actionsfile[$actionname])
         {
+            if($actionname == "Checkpoint")
+            {
+                $variables = explode($variable, "|");
+                //$variables[0] = login
+                //$variables[1] = percentage
+                $action = str_replace('$percentage_checkpoint$', $variables[1], $action);
+            }
+            if($actionname == "BeginMap")
+            {
+                $action = str_replace('$NOM_DE_LA_MAP$', $variable, $action);
+            }
+
+
             Logger::log('Sent ' . $action . ' to CASPARCG Server');
-            $response = $this->connector->makeRequest('PLAY 1-0 ' . $action . ' AUTO');
+            $response = $this->connector->makeRequest($action);
         }else{
             Logger::log('Action missing ' . $action . ' to CASPARCG Server');
         }
@@ -166,14 +179,14 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
 
     public function handleBeginMapCallback()
     {
+        $map = $this->maniaControl->getMapManager()->getCurrentMap();
         if($this->maniaControl->getClient()->getModeScriptInfo()->name == "Cup.Script.txt")
         {
             $this->matchStarted = true;
-            $this->sendActiontoCASPARCG("BeginMap");
+            $this->sendActiontoCASPARCG("BeginMap", $map->name);
         }else{
             $this->matchStarted = false;
         }
-        $map = $this->maniaControl->getMapManager()->getCurrentMap();
         $this->nbCheckpoints = $map->nbCheckpoints;
     }
 
@@ -182,12 +195,12 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
         if ($this->matchStarted) {
             $this->firstfinish = true;
             $this->sent = true;
-            $this->sendActiontoCASPARCG("Rouge");
+            $this->sendActiontoCASPARCG("FeuRouge");
             $this->maniaControl->getTimerManager()->registerOneTimeListening($this, function () use (&$player) {
-                $this->sendActiontoCASPARCG("Orange");
+                $this->sendActiontoCASPARCG("FeuOrange");
             }, 1000);
             $this->maniaControl->getTimerManager()->registerOneTimeListening($this, function () use (&$player) {
-                $this->sendActiontoCASPARCG("Vert");
+                $this->sendActiontoCASPARCG("FeuVert");
             }, 1000);
         }
     }
@@ -199,7 +212,7 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
             $currentCheckpoint = ($structure->getCheckPointInRace() + 1);
             $percentage = ($currentCheckpoint / $this->nbCheckpoints);
             $login = $structure->getLogin();
-            $this->sendActiontoCASPARCG("Checkpoint");
+            $this->sendActiontoCASPARCG("Checkpoint", $login . "|".$percentage);
         }
     }
 
@@ -227,7 +240,7 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
                         //$this->sent = false;
                     } elseif ($winner) {
                         $this->sendActiontoCASPARCG("Winner");
-                        $this->sent = false;
+                        //$this->sent = false;
                     }
                 }
             }

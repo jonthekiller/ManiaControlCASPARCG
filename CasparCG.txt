@@ -1,0 +1,8 @@
+BeginMap=PLAY 1-1 MAPS/$NOM_DE_LA_MAP$ MIX 20 AUTO
+FeuRouge=PLAY 1-50 ROUGE
+FeuOrange=PLAY 1-51 ORANGE
+FeuVert=PLAY 1-52 VERT
+Checkpoint=PLAY X-X ma_page_html?value=$percentage_checkpoint$
+FinishRound=
+Winner=
+Finalist=
