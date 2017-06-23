@@ -40,16 +40,16 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
     private $sent = false;
     private $actionsfile = array();
     private $lastresults = array();
-    private $matchpoints = 200;
+    private $matchpoints = 30;
     private $matchStarted = false;
     private $nbCheckpoints = 0;
 
     public function __construct() {
         $this->address = "127.0.0.1";
         $this->port = 5250;
-        if (!$this->connectSocket()) {
-            Logger::log("The socket could not be created.");
-        }
+//        if (!$this->connectSocket()) {
+//            Logger::log("The socket could not be created.");
+//        }
     }
 
     /**
@@ -101,7 +101,7 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
 
         // Settings
         $this->maniaControl->getSettingManager()->initSetting($this, self::SETTING_CASPARCG_ACTIVATED, true);
-        $this->maniaControl->getSettingManager()->initSetting($this, self::SETTING_CASPARCG_ACTIONSFILE, '/home/drakonia/ManiaPlanet4/ManiaControl/CasparCG.txt');
+        $this->maniaControl->getSettingManager()->initSetting($this, self::SETTING_CASPARCG_ACTIONSFILE, 'D:\PhpstormProjects\ManiaControl2\CasparCG.txt');
 
         $this->connector = new CasparCGPlugin(); // all communication to the server will now be done through this object
 
@@ -110,7 +110,7 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
         $this->maniaControl->getCallbackManager()->registerCallbackListener(SettingManager::CB_SETTING_CHANGED, $this, 'updateSettings');
 
         $this->maniaControl->getCallbackManager()->registerCallbackListener(Callbacks::MP_STARTROUNDSTART, $this, 'handleBeginRoundCallback');
-        $this->maniaControl->getCallbackManager()->registerCallbackListener(Callbacks::TM_ONFINISHLINE, $this, 'handleFinishCallback');
+        $this->maniaControl->getCallbackManager()->registerCallbackListener(Callbacks::TM_ONFINISHLINE, $this, 'handleCheckpointCallback');
         $this->maniaControl->getCallbackManager()->registerCallbackListener(Callbacks::BEGINMAP, $this, 'handleBeginMapCallback');
         $this->maniaControl->getCallbackManager()->registerCallbackListener(Callbacks::MP_WARMUP_START, $this, 'handleBeginWarmUpCallback');
         $this->maniaControl->getCallbackManager()->registerCallbackListener(Callbacks::TM_SCORES, $this, 'handleEndRoundCallback');
@@ -156,12 +156,13 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
     {
         if ($action = $this->actionsfile[$actionname])
         {
-            if($actionname == "Checkpoint")
+            if(strpos($actionname, 'Checkpoint') !== false)
             {
-                $variables = explode($variable, "|");
-                //$variables[0] = login
-                //$variables[1] = percentage
-                $action = str_replace('$percentage_checkpoint$', $variables[1], $action);
+                $action = str_replace('$PERCENT$', $variable, $action);
+            }
+            if(strpos($actionname, 'Score') !== false)
+            {
+                $action = str_replace('$SCORE$', $variable, $action);
             }
             if($actionname == "BeginMap")
             {
@@ -169,8 +170,8 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
             }
 
 
-            Logger::log('Sent ' . $action . ' to CASPARCG Server');
-            $response = $this->connector->makeRequest($action);
+            Logger::log($action);
+            //$response = $this->connector->makeRequest($action);
         }else{
             Logger::log('Action missing ' . $action . ' to CASPARCG Server');
         }
@@ -195,13 +196,20 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
         if ($this->matchStarted) {
             $this->firstfinish = true;
             $this->sent = true;
-            $this->sendActiontoCASPARCG("FeuRouge");
+            $this->sendActiontoCASPARCG("Checkpoint1", 0);
+            $this->sendActiontoCASPARCG("Checkpoint2", 0);
+            $this->sendActiontoCASPARCG("Checkpoint3", 0);
+            $this->sendActiontoCASPARCG("Checkpoint4", 0);
+            $this->sendActiontoCASPARCG("FeuRouge1");
+            $this->sendActiontoCASPARCG("FeuRouge2");
             $this->maniaControl->getTimerManager()->registerOneTimeListening($this, function () use (&$player) {
-                $this->sendActiontoCASPARCG("FeuOrange");
-            }, 1000);
+                $this->sendActiontoCASPARCG("FeuOrange1");
+                $this->sendActiontoCASPARCG("FeuOrange2");
+            }, 2000);
             $this->maniaControl->getTimerManager()->registerOneTimeListening($this, function () use (&$player) {
-                $this->sendActiontoCASPARCG("FeuVert");
-            }, 1000);
+                $this->sendActiontoCASPARCG("FeuVert1");
+                $this->sendActiontoCASPARCG("FeuVert2");
+            }, 3000);
         }
     }
 
@@ -210,42 +218,73 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
         if ($this->matchStarted) {
 
             $currentCheckpoint = ($structure->getCheckPointInRace() + 1);
-            $percentage = ($currentCheckpoint / $this->nbCheckpoints);
+            $percentage = ($currentCheckpoint / $this->nbCheckpoints)*100;
             $login = $structure->getLogin();
-            $this->sendActiontoCASPARCG("Checkpoint", $login . "|".$percentage);
-        }
-    }
-
-    public function handleFinishCallback(OnWayPointEventStructure $structure)
-    {
-        if ($this->matchStarted) {
-            $finalist = false;
-            $winner = false;
-            if ($this->firstfinish) {
-                // Send packet only for the 1st finish
-                $this->firstfinish = false;
-
-
-                $player = $structure->getPlayer();
-
-                if ($this->lastresults[$player->login] == "Finalist") {
-                    $winner = true;
-                }
-
-                if ($this->sent) {
-                    if ($action = $this->actionsfile['FinishRound'] && !$winner) {
-                        $this->sendActiontoCASPARCG("FinishRound");
-                    } elseif ($finalist && !$winner) {
-                        //$this->sendActiontoCASPARCG("Finalist");
-                        //$this->sent = false;
-                    } elseif ($winner) {
-                        $this->sendActiontoCASPARCG("Winner");
-                        //$this->sent = false;
-                    }
-                }
+            $action = "";
+            switch ($login){
+                case $this->actionsfile['Player1']:
+                    $action = "Checkpoint1";
+                    break;
+                case $this->actionsfile['Player2']:
+                    $action = "Checkpoint2";
+                    break;
+                case $this->actionsfile['Player3']:
+                    $action = "Checkpoint3";
+                    break;
+                case $this->actionsfile['Player4']:
+                    $action = "Checkpoint4";
+                    break;
             }
+
+            $this->sendActiontoCASPARCG($action, $percentage);
         }
     }
+
+//
+//    public function handleFinishCallback(OnWayPointEventStructure $structure)
+//    {
+//        if ($this->matchStarted) {
+//            $finalist = false;
+//            $winner = false;
+//            if ($this->firstfinish) {
+//                // Send packet only for the 1st finish
+//                $this->firstfinish = false;
+//
+//
+//                $player = $structure->getPlayer();
+//
+//                if ($this->lastresults[$player->login] == "Finalist") {
+//                    $winner = true;
+//                }
+//
+//                if ($this->sent) {
+//                    if ($action = $this->actionsfile['FinishRound'] && !$winner) {
+//                        $this->sendActiontoCASPARCG("FinishRound");
+//                    } elseif ($finalist && !$winner) {
+//                        switch ($player->login){
+//                            case $this->actionsfile['Player1']:
+//                                $action = "Checkpoint1";
+//                                break;
+//                            case $this->actionsfile['Player2']:
+//                                $action = "Checkpoint2";
+//                                break;
+//                            case $this->actionsfile['Player3']:
+//                                $action = "Checkpoint3";
+//                                break;
+//                            case $this->actionsfile['Player4']:
+//                                $action = "Checkpoint4";
+//                                break;
+//                        }
+//                        //$this->sendActiontoCASPARCG("Finalist");
+//                        //$this->sent = false;
+//                    } elseif ($winner) {
+//                        $this->sendActiontoCASPARCG("Winner");
+//                        //$this->sent = false;
+//                    }
+//                }
+//            }
+//        }
+//    }
 
     public function handleBeginWarmUpCallback(){
 
@@ -253,7 +292,7 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
 
     public function handleEndRoundCallback(OnScoresStructure $structure)
     {
-        if($structure->getSection() == "EndRound" AND $this->matchStarted) {
+        if($structure->getSection() == "PreEndRound" AND $this->matchStarted) {
             $results = $structure->getPlayerScores();
             //$this->lastresults = array();
             foreach ($results as $result) {
@@ -261,18 +300,84 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
 
                 } else {
                     $login = $result->getPlayer()->login;
-                    $points = $result->getMatchPoints();
+                    $points = $result->getMatchPoints() + $result->getRoundPoints();
 
-
-                    if ($this->matchpoints == $points) {
-                        $this->lastresults[$login] = "Finalist";
-                        $this->sendActiontoCASPARCG("Finalist");
-                    } elseif ($this->matchpoints < $points) {
-                        $this->lastresults[$login] = "Winner";
-                    } else {
-                        $this->lastresults[$login] = $points;
+                    if($points == "")
+                    {
+                        $points = 0;
                     }
 
+                    $points2 = false;
+                    if (isset($this->lastresults[$login])) {
+                        if ($this->lastresults[$login] == "Finalist") {
+                            $points2 = true;
+                        } elseif ($points >= $this->matchpoints) {
+                            $points = $this->matchpoints;
+                            $points2 = true;
+                        }
+                    }elseif ($points >= $this->matchpoints) {
+                        $points = $this->matchpoints;
+                        $points2 = true;
+                    }
+                    $action = "";
+                    switch ($login){
+                        case $this->actionsfile['Player1']:
+                            $action = "Score1";
+                            break;
+                        case $this->actionsfile['Player2']:
+                            $action = "Score2";
+                            break;
+                        case $this->actionsfile['Player3']:
+                            $action = "Score3";
+                            break;
+                        case $this->actionsfile['Player4']:
+                            $action = "Score4";
+                            break;
+                    }
+                    $this->sendActiontoCASPARCG($action, $points);
+                    if($points2) {
+                        if ($this->matchpoints < $points AND $this->lastresults[$login] == "Finalist") {
+
+                            $this->lastresults[$login] = "Winner";
+                            switch ($login) {
+                                case $this->actionsfile['Player1']:
+                                    $action = "Winner1";
+                                    break;
+                                case $this->actionsfile['Player2']:
+                                    $action = "Winner2";
+                                    break;
+                                case $this->actionsfile['Player3']:
+                                    $action = "Winner3";
+                                    break;
+                                case $this->actionsfile['Player4']:
+                                    $action = "Winner4";
+                                    break;
+                            }
+                            $this->sendActiontoCASPARCG($action);
+
+                        } elseif ($this->matchpoints <= $points AND $this->lastresults[$login] != "Winner") {
+                            $this->lastresults[$login] = "Finalist";
+                            switch ($login) {
+                                case $this->actionsfile['Player1']:
+                                    $action = "Finalist1";
+                                    break;
+                                case $this->actionsfile['Player2']:
+                                    $action = "Finalist2";
+                                    break;
+                                case $this->actionsfile['Player3']:
+                                    $action = "Finalist3";
+                                    break;
+                                case $this->actionsfile['Player4']:
+                                    $action = "Finalist4";
+                                    break;
+                            }
+                            $this->sendActiontoCASPARCG($action);
+                        } else {
+                            $this->lastresults[$login] = $points;
+                        }
+                    }else {
+                        $this->lastresults[$login] = $points;
+                    }
                 }
             }
         }
