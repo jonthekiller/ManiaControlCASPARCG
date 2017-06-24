@@ -111,8 +111,8 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
 
         $this->maniaControl->getCallbackManager()->registerCallbackListener(Callbacks::MP_STARTROUNDSTART, $this, 'handleBeginRoundCallback');
         $this->maniaControl->getCallbackManager()->registerCallbackListener(Callbacks::TM_ONFINISHLINE, $this, 'handleCheckpointCallback');
+        $this->maniaControl->getCallbackManager()->registerCallbackListener(Callbacks::TM_ONLAPFINISH, $this, 'handleCheckpointCallback');
         $this->maniaControl->getCallbackManager()->registerCallbackListener(Callbacks::BEGINMAP, $this, 'handleBeginMapCallback');
-        $this->maniaControl->getCallbackManager()->registerCallbackListener(Callbacks::MP_WARMUP_START, $this, 'handleBeginWarmUpCallback');
         $this->maniaControl->getCallbackManager()->registerCallbackListener(Callbacks::TM_SCORES, $this, 'handleEndRoundCallback');
         $this->maniaControl->getCallbackManager()->registerCallbackListener(Callbacks::TM_ONWAYPOINT, $this, 'handleCheckpointCallback');
 
@@ -184,11 +184,21 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
         if($this->maniaControl->getClient()->getModeScriptInfo()->name == "Cup.Script.txt")
         {
             $this->matchStarted = true;
-            $this->sendActiontoCASPARCG("BeginMap", $map->name);
+            $this->sendActiontoCASPARCG("BeginMap", $map->uid);
+            $this->sendActiontoCASPARCG("Playernick1");
+            $this->sendActiontoCASPARCG("Playernick2");
+            $this->sendActiontoCASPARCG("Playernick3");
+            $this->sendActiontoCASPARCG("Playernick4");
         }else{
             $this->matchStarted = false;
         }
-        $this->nbCheckpoints = $map->nbCheckpoints;
+
+        if($map->uid == "EkNh3L4HhX7MTdxp6sb435OLdJ")
+        {
+            $this->nbCheckpoints = $map->nbCheckpoints * 2;
+        }else {
+            $this->nbCheckpoints = $map->nbCheckpoints;
+        }
     }
 
     public function handleBeginRoundCallback()
@@ -200,16 +210,21 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
             $this->sendActiontoCASPARCG("Checkpoint2", 0);
             $this->sendActiontoCASPARCG("Checkpoint3", 0);
             $this->sendActiontoCASPARCG("Checkpoint4", 0);
-            $this->sendActiontoCASPARCG("FeuRouge1");
-            $this->sendActiontoCASPARCG("FeuRouge2");
+//            $this->sendActiontoCASPARCG("FeuRouge1");
+//            $this->sendActiontoCASPARCG("FeuRouge2");
+//            $this->maniaControl->getTimerManager()->registerOneTimeListening($this, function () use (&$player) {
+//                $this->sendActiontoCASPARCG("FeuOrange1");
+//                $this->sendActiontoCASPARCG("FeuOrange2");
+//            }, 2000);
+//            $this->maniaControl->getTimerManager()->registerOneTimeListening($this, function () use (&$player) {
+//                $this->sendActiontoCASPARCG("FeuVert1");
+//                $this->sendActiontoCASPARCG("FeuVert2");
+//            }, 3000);
+
             $this->maniaControl->getTimerManager()->registerOneTimeListening($this, function () use (&$player) {
-                $this->sendActiontoCASPARCG("FeuOrange1");
-                $this->sendActiontoCASPARCG("FeuOrange2");
-            }, 2000);
-            $this->maniaControl->getTimerManager()->registerOneTimeListening($this, function () use (&$player) {
-                $this->sendActiontoCASPARCG("FeuVert1");
-                $this->sendActiontoCASPARCG("FeuVert2");
-            }, 3000);
+                $this->sendActiontoCASPARCG("Feu1");
+                $this->sendActiontoCASPARCG("Feu2");
+            }, 1000);
         }
     }
 
@@ -218,7 +233,7 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
         if ($this->matchStarted) {
 
             $currentCheckpoint = ($structure->getCheckPointInRace() + 1);
-            $percentage = ($currentCheckpoint / $this->nbCheckpoints)*100;
+            $percentage = round(($currentCheckpoint / $this->nbCheckpoints)*100,1);
             $login = $structure->getLogin();
             $action = "";
             switch ($login){
@@ -286,9 +301,6 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
 //        }
 //    }
 
-    public function handleBeginWarmUpCallback(){
-
-    }
 
     public function handleEndRoundCallback(OnScoresStructure $structure)
     {
@@ -308,9 +320,13 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
                     }
 
                     $points2 = false;
+                    $winner = false;
                     if (isset($this->lastresults[$login])) {
                         if ($this->lastresults[$login] == "Finalist") {
                             $points2 = true;
+                        } elseif ($this->lastresults[$login] == "Winner") {
+                            $points2 = false;
+                            $winner = true;
                         } elseif ($points >= $this->matchpoints) {
                             $points = $this->matchpoints;
                             $points2 = true;
@@ -334,7 +350,7 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
                             $action = "Score4";
                             break;
                     }
-                    $this->sendActiontoCASPARCG($action, $points);
+
                     if($points2) {
                         if ($this->matchpoints < $points AND $this->lastresults[$login] == "Finalist") {
 
@@ -373,10 +389,15 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
                             }
                             $this->sendActiontoCASPARCG($action);
                         } else {
+                            $this->sendActiontoCASPARCG($action, $points);
                             $this->lastresults[$login] = $points;
                         }
                     }else {
-                        $this->lastresults[$login] = $points;
+
+                        if(!$winner) {
+                            $this->lastresults[$login] = $points;
+                            $this->sendActiontoCASPARCG($action, $points);
+                        }
                     }
                 }
             }
