@@ -40,16 +40,16 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
     private $sent = false;
     private $actionsfile = array();
     private $lastresults = array();
-    private $matchpoints = 30;
+    private $matchpoints = 20;
     private $matchStarted = false;
     private $nbCheckpoints = 0;
 
     public function __construct() {
-        $this->address = "127.0.0.1";
+        $this->address = "25.101.108.111";
         $this->port = 5250;
-//        if (!$this->connectSocket()) {
-//            Logger::log("The socket could not be created.");
-//        }
+        if (!$this->connectSocket()) {
+            Logger::log("The socket could not be created.");
+        }
     }
 
     /**
@@ -139,6 +139,7 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
             foreach($lines as $line) {
                 list($key, $value) = explode('=', $line, 2);
                 $this->actionsfile[$key] = $value;
+//Logger::log("Action: ".$key);
             }
             if(count($this->actionsfile) > 1)
                 $this->maniaControl->getChat()->sendSuccessToAdmins("CASPARCG File successfully loaded: " . $file);
@@ -154,26 +155,24 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
 
     public function sendActiontoCASPARCG($actionname,$variable = null)
     {
-        if ($action = $this->actionsfile[$actionname])
-        {
-            if(strpos($actionname, 'Checkpoint') !== false)
-            {
-                $action = str_replace('$PERCENT$', $variable, $action);
-            }
-            if(strpos($actionname, 'Score') !== false)
-            {
-                $action = str_replace('$SCORE$', $variable, $action);
-            }
-            if($actionname == "BeginMap")
-            {
-                $action = str_replace('$NOM_DE_LA_MAP$', $variable, $action);
-            }
+        if($actionname) {
+            if ($action = $this->actionsfile[$actionname]) {
+                if (strpos($actionname, 'Checkpoint') !== false) {
+                    $action = str_replace('$PERCENT$', $variable, $action);
+                }
+                if (strpos($actionname, 'Score') !== false) {
+                    $action = str_replace('$SCORE$', $variable, $action);
+                }
+                if ($actionname == "BeginMap") {
+                    $action = str_replace('$NOM_DE_LA_MAP$', $variable, $action);
+                }
 
 
-            Logger::log($action);
-            //$response = $this->connector->makeRequest($action);
-        }else{
-            Logger::log('Action missing ' . $action . ' to CASPARCG Server');
+                Logger::log($action);
+                $response = $this->connector->makeRequest($action);
+            } else {
+                Logger::log('Action missing ' . $action . ' to CASPARCG Server');
+            }
         }
     }
 
@@ -184,11 +183,15 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
         if($this->maniaControl->getClient()->getModeScriptInfo()->name == "Cup.Script.txt")
         {
             $this->matchStarted = true;
-            $this->sendActiontoCASPARCG("BeginMap", $map->uid);
+            //$this->sendActiontoCASPARCG("BeginMap", $map->uid);
             $this->sendActiontoCASPARCG("Playernick1");
             $this->sendActiontoCASPARCG("Playernick2");
             $this->sendActiontoCASPARCG("Playernick3");
             $this->sendActiontoCASPARCG("Playernick4");
+            $this->sendActiontoCASPARCG("Checkpoint01");
+            $this->sendActiontoCASPARCG("Checkpoint02");
+            $this->sendActiontoCASPARCG("Checkpoint03");
+            $this->sendActiontoCASPARCG("Checkpoint04");
         }else{
             $this->matchStarted = false;
         }
@@ -210,21 +213,21 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
             $this->sendActiontoCASPARCG("Checkpoint2", 0);
             $this->sendActiontoCASPARCG("Checkpoint3", 0);
             $this->sendActiontoCASPARCG("Checkpoint4", 0);
-//            $this->sendActiontoCASPARCG("FeuRouge1");
-//            $this->sendActiontoCASPARCG("FeuRouge2");
-//            $this->maniaControl->getTimerManager()->registerOneTimeListening($this, function () use (&$player) {
-//                $this->sendActiontoCASPARCG("FeuOrange1");
-//                $this->sendActiontoCASPARCG("FeuOrange2");
-//            }, 2000);
-//            $this->maniaControl->getTimerManager()->registerOneTimeListening($this, function () use (&$player) {
-//                $this->sendActiontoCASPARCG("FeuVert1");
-//                $this->sendActiontoCASPARCG("FeuVert2");
-//            }, 3000);
+            $this->sendActiontoCASPARCG("FeuRouge1");
+            $this->sendActiontoCASPARCG("FeuRouge2");
+            $this->sendActiontoCASPARCG("FeuOrange1");
+            $this->sendActiontoCASPARCG("FeuOrange2");
+            $this->sendActiontoCASPARCG("FeuVert1");
+            $this->sendActiontoCASPARCG("FeuVert2");
 
             $this->maniaControl->getTimerManager()->registerOneTimeListening($this, function () use (&$player) {
-                $this->sendActiontoCASPARCG("Feu1");
-                $this->sendActiontoCASPARCG("Feu2");
-            }, 1000);
+                $this->sendActiontoCASPARCG("FeuRouge3");
+                $this->sendActiontoCASPARCG("FeuRouge4");
+                $this->sendActiontoCASPARCG("FeuOrange3");
+                $this->sendActiontoCASPARCG("FeuOrange4");
+                $this->sendActiontoCASPARCG("FeuVert3");
+                $this->sendActiontoCASPARCG("FeuVert4");
+            }, 5000);
         }
     }
 
@@ -236,21 +239,22 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
             $percentage = round(($currentCheckpoint / $this->nbCheckpoints)*100,1);
             $login = $structure->getLogin();
             $action = "";
-            switch ($login){
-                case $this->actionsfile['Player1']:
+            switch (trim($login)) {
+                case trim($this->actionsfile['Player1']):
                     $action = "Checkpoint1";
                     break;
-                case $this->actionsfile['Player2']:
+                case trim($this->actionsfile['Player2']):
                     $action = "Checkpoint2";
                     break;
-                case $this->actionsfile['Player3']:
+                case trim($this->actionsfile['Player3']):
                     $action = "Checkpoint3";
                     break;
-                case $this->actionsfile['Player4']:
+                case trim($this->actionsfile['Player4']):
                     $action = "Checkpoint4";
                     break;
             }
 
+            //Logger::log("Action: " . $action);
             $this->sendActiontoCASPARCG($action, $percentage);
         }
     }
@@ -335,18 +339,22 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
                         $points = $this->matchpoints;
                         $points2 = true;
                     }
+
+                    if($points < 10)
+                        $points = "0".$points;
+
                     $action = "";
-                    switch ($login){
-                        case $this->actionsfile['Player1']:
+                    switch (trim($login)){
+                        case trim($this->actionsfile['Player1']):
                             $action = "Score1";
                             break;
-                        case $this->actionsfile['Player2']:
+                        case trim($this->actionsfile['Player2']):
                             $action = "Score2";
                             break;
-                        case $this->actionsfile['Player3']:
+                        case trim($this->actionsfile['Player3']):
                             $action = "Score3";
                             break;
-                        case $this->actionsfile['Player4']:
+                        case trim($this->actionsfile['Player4']):
                             $action = "Score4";
                             break;
                     }
@@ -355,17 +363,17 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
                         if ($this->matchpoints < $points AND $this->lastresults[$login] == "Finalist") {
 
                             $this->lastresults[$login] = "Winner";
-                            switch ($login) {
-                                case $this->actionsfile['Player1']:
+                            switch (trim($login)) {
+                                case trim($this->actionsfile['Player1']):
                                     $action = "Winner1";
                                     break;
-                                case $this->actionsfile['Player2']:
+                                case trim($this->actionsfile['Player2']):
                                     $action = "Winner2";
                                     break;
-                                case $this->actionsfile['Player3']:
+                                case trim($this->actionsfile['Player3']):
                                     $action = "Winner3";
                                     break;
-                                case $this->actionsfile['Player4']:
+                                case trim($this->actionsfile['Player4']):
                                     $action = "Winner4";
                                     break;
                             }
@@ -373,21 +381,26 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
 
                         } elseif ($this->matchpoints <= $points AND $this->lastresults[$login] != "Winner") {
                             $this->lastresults[$login] = "Finalist";
-                            switch ($login) {
-                                case $this->actionsfile['Player1']:
-                                    $action = "Finalist1";
+                            switch (trim($login)) {
+                                case trim($this->actionsfile['Player1']):
+                                    $action1 = "Finalist1";
+                                    $action2 = "Score1";
                                     break;
-                                case $this->actionsfile['Player2']:
-                                    $action = "Finalist2";
+                                case trim($this->actionsfile['Player2']):
+                                    $action1 = "Finalist2";
+                                    $action2 = "Score2";
                                     break;
-                                case $this->actionsfile['Player3']:
-                                    $action = "Finalist3";
+                                case trim($this->actionsfile['Player3']):
+                                    $action1 = "Finalist3";
+                                    $action2 = "Score3";
                                     break;
-                                case $this->actionsfile['Player4']:
-                                    $action = "Finalist4";
+                                case trim($this->actionsfile['Player4']):
+                                    $action1 = "Finalist4";
+                                    $action2 = "Score4";
                                     break;
                             }
-                            $this->sendActiontoCASPARCG($action);
+                            $this->sendActiontoCASPARCG($action1);
+                            $this->sendActiontoCASPARCG($action2, $points);
                         } else {
                             $this->sendActiontoCASPARCG($action, $points);
                             $this->lastresults[$login] = $points;
