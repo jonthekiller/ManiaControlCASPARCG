@@ -1,41 +1,54 @@
-Player1=jonthekiller
-Player2=velahan
-Player3=drakonia1
-Player4=drakonia6
-Playernick1=PLAY 1-561 [HTML] "file:///C:/CasparCG%20Server/Server/media/text.html?text=CarlJR&size=48&top=445&left=150px" CUT 1 Linear RIGHT
-Playernick2=PLAY 1-562 [HTML] "file:///C:/CasparCG%20Server/Server/media/text.html?text=BREN&size=48&top=509&left=150px" CUT 1 Linear RIGHT
-Playernick3=PLAY 1-563 [HTML] "file:///C:/CasparCG%20Server/Server/media/text.html?text=BADLULU&size=48&top=575&left=150px" CUT 1 Linear RIGHT
-Playernick4=PLAY 1-564 [HTML] "file:///C:/CasparCG%20Server/Server/media/text.html?text=PACO&size=48&top=639&left=150px" CUT 1 Linear RIGHT
+Player1=-aurel-
+Player2=super-papou
+Player3=7voix
+Player4=lilcarl96
+Playernick1=PLAY 1-711 [HTML] "file:///C:/casparcg/Server/media/text.html?text=AUREL&top=623&left=280&size=34" CUT 1 Linear RIGHT
+Playernick2=PLAY 1-712 [HTML] "file:///C:/casparcg/Server/media/text.html?text=PAPOU&top=737&left=265&size=34" CUT 1 Linear RIGHT
+Playernick3=PLAY 1-713 [HTML] "file:///C:/casparcg/Server/media/text.html?text=BREN&top=623&left=872&size=34" CUT 1 Linear RIGHT
+Playernick4=PLAY 1-714 [HTML] "file:///C:/casparcg/Server/media/text.html?text=CARLJR&top=737&left=872&size=34" CUT 1 Linear RIGHT
 BeginMap=PLAY 1-1 MAPS/$NOM_DE_LA_MAP$ MIX 20 AUTO
-FeuRouge1=PLAY 1-615 "COTE/ROUGE"
-FeuRouge2=PLAY 1-645 "COTE/ROUGE"
-FeuRouge3=CLEAR 1-615
-FeuRouge4=CLEAR 1-645
-FeuOrange1=PLAY 1-625 "COTE/ORANGE"
-FeuOrange2=PLAY 1-655 "COTE/ORANGE"
-FeuOrange3=CLEAR 1-625
-FeuOrange4=CLEAR 1-655
-FeuVert1=PLAY 1-635 "COTE/VERT"
-FeuVert2=PLAY 1-665 "COTE/VERT"
-FeuVert3=CLEAR 1-635
-FeuVert4=CLEAR 1-665
-Checkpoint01=PLAY 1-546 [HTML] "file:///C:/CasparCG%20Server/Server/media/pourcent.html?value=0&width=954&top=460&left=350px" CUT 1 Linear RIGHT
-Checkpoint02=PLAY 1-547 [HTML] "file:///C:/CasparCG%20Server/Server/media/pourcent.html?value=0&width=954&top=524&left=350px" CUT 1 Linear RIGHT
-Checkpoint03=PLAY 1-548 [HTML] "file:///C:/CasparCG%20Server/Server/media/pourcent.html?value=0&width=954&top=590&left=350px" CUT 1 Linear RIGHT
-Checkpoint04=PLAY 1-549 [HTML] "file:///C:/CasparCG%20Server/Server/media/pourcent.html?value=0&width=954&top=654&left=350px" CUT 1 Linear RIGHT
-Checkpoint1=PLAY 1-551 [HTML] "file:///C:/CasparCG%20Server/Server/media/pourcent.html?value=$PERCENT$&width=954&top=460&left=350px" CUT 1 Linear RIGHT
-Checkpoint2=PLAY 1-552 [HTML] "file:///C:/CasparCG%20Server/Server/media/pourcent.html?value=$PERCENT$&width=954&top=524&left=350px" CUT 1 Linear RIGHT
-Checkpoint3=PLAY 1-553 [HTML] "file:///C:/CasparCG%20Server/Server/media/pourcent.html?value=$PERCENT$&width=954&top=590&left=350px" CUT 1 Linear RIGHT
-Checkpoint4=PLAY 1-554 [HTML] "file:///C:/CasparCG%20Server/Server/media/pourcent.html?value=$PERCENT$&width=954&top=654&left=350px" CUT 1 Linear RIGHT
-Score1=PLAY 1-634 [HTML] "file:///C:/CasparCG%20Server/Server/media/text.html?text=$SCORE$&size=45&left=120&top=35" CUT 1 Linear RIGHT
-Score2=PLAY 1-614 [HTML] "file:///C:/CasparCG%20Server/Server/media/text.html?text=$SCORE$&size=45&left=5&top=35" CUT 1 Linear RIGHT
-Score3=PLAY 1-644 [HTML] "file:///C:/CasparCG%20Server/Server/media/text.html?text=$SCORE$&size=45&left=173&top=35" CUT 1 Linear RIGHT
-Score4=PLAY 1-664 [HTML] "file:///C:/CasparCG%20Server/Server/media/text.html?text=$SCORE$&size=45&left=288&top=35" CUT 1 Linear RIGHT
-Finalist1=PLAY 1-571 [HTML] "file:///C:/CasparCG%20Server/Server/media/text.html?text=Finaliste&size=48&left=1325&top=445" CUT 1 Linear RIGHT
-Finalist2=PLAY 1-572 [HTML] "file:///C:/CasparCG%20Server/Server/media/text.html?text=Finaliste&size=48&left=1325&top=509" CUT 1 Linear RIGHT
-Finalist3=PLAY 1-573 [HTML] "file:///C:/CasparCG%20Server/Server/media/text.html?text=Finaliste&size=48&left=1325&top=575" CUT 1 Linear RIGHT
-Finalist4=PLAY 1-574 [HTML] "file:///C:/CasparCG%20Server/Server/media/text.html?text=Finaliste&size=48&left=1325&top=639" CUT 1 Linear RIGHT
-Winner1=PLAY 1-571 [HTML] "file:///C:/CasparCG%20Server/Server/media/text.html?text=Vainqueur&size=48&left=1325&top=445" CUT 1 Linear RIGHT
-Winner2=PLAY 1-572 [HTML] "file:///C:/CasparCG%20Server/Server/media/text.html?text=Vainqueur&size=48&left=1325&top=509" CUT 1 Linear RIGHT
-Winner3=PLAY 1-573 [HTML] "file:///C:/CasparCG%20Server/Server/media/text.html?text=Vainqueur&size=48&left=1325&top=575" CUT 1 Linear RIGHT
-Winner4=PLAY 1-574 [HTML] "file:///C:/CasparCG%20Server/Server/media/text.html?text=Vainqueur&size=48&left=1325&top=639" CUT 1 Linear RIGHT
+FeuRouge1=PLAY 1-191 "ASSET LED/BANDEAUX_LATERAUX/FEU_ROUGE"
+FeuRouge2=PLAY 1-691 "ASSET LED/BANDEAUX_LATERAUX/FEU_ROUGE"
+FeuRouge3=CLEAR 1-191
+FeuRouge4=CLEAR 1-691
+FeuOrange1=PLAY 1-291 "ASSET LED/BANDEAUX_LATERAUX/FEU_ORANGE"
+FeuOrange2=PLAY 1-591 "ASSET LED/BANDEAUX_LATERAUX/FEU_ORANGE"
+FeuOrange3=CLEAR 1-291
+FeuOrange4=CLEAR 1-591
+FeuVert1=PLAY 1-391 "ASSET LED/BANDEAUX_LATERAUX/FEU_VERT"
+FeuVert2=PLAY 1-491 "ASSET LED/BANDEAUX_LATERAUX/FEU_VERT"
+FeuVert3=CLEAR 1-391
+FeuVert4=CLEAR 1-491
+Start1=PLAY 1-791 "ASSET LED/HABILLAGE_CENTRAL/START"
+Start2=CLEAR 1-791
+WarmUp1=PLAY 1-791 "ASSET LED/HABILLAGE_CENTRAL/WARM_UP"
+WarmUp2=CLEAR 1-791
+Background=PLAY 1-700 "ASSET LED/HABILLAGE_CENTRAL/JAUGE" LOOP 
+Checkpoint01=CG 1-721 ADD 1 "Pourcent/INDEX" 1 "{\"left\":\"299\",\"top\":\"665\",\"width\":\"570\",\"percent\":\"0\"}"
+Checkpoint02=CG 1-722 ADD 1 "Pourcent/INDEX" 1 "{\"left\":\"299\",\"top\":\"780\",\"width\":\"570\",\"percent\":\"0\"}"
+Checkpoint03=CG 1-723 ADD 1 "Pourcent/INDEX" 1 "{\"left\":\"922\",\"top\":\"665\",\"width\":\"570\",\"percent\":\"0\"}"
+Checkpoint04=CG 1-724 ADD 1 "Pourcent/INDEX" 1 "{\"left\":\"922\",\"top\":\"780\",\"width\":\"570\",\"percent\":\"0\"}"
+Checkpoint1=CG 1-721 UPDATE 1 "{\"percent\":\"$PERCENT$\"}"
+Checkpoint2=CG 1-722 UPDATE 1 "{\"percent\":\"$PERCENT$\"}"
+Checkpoint3=CG 1-723 UPDATE 1 "{\"percent\":\"$PERCENT$\"}"
+Checkpoint4=CG 1-724 UPDATE 1 "{\"percent\":\"$PERCENT$\"}"
+CPCar1=PLAY 1-771 "VOITURE" $END$
+CPCar2=PLAY 1-772 "VOITURE" $END$
+CPCar3=PLAY 1-773 "VOITURE" $END$
+CPCar4=PLAY 1-774 "VOITURE" $END$
+ClearCP1=CLEAR 1-771
+ClearCP2=CLEAR 1-772
+ClearCP3=CLEAR 1-773
+ClearCP4=CLEAR 1-774
+Score1=PLAY 1-211 [HTML] "file:///C:/CasparCG/Server/media/text.html?text=$SCORE$&top=0&left=225&size=99" CUT 1 Linear RIGHT
+Score2=PLAY 1-311 [HTML] "file:///C:/CasparCG/Server/media/text.html?text=$SCORE$&top=0&left=440&size=99" CUT 1 Linear RIGHT
+Score3=PLAY 1-411 [HTML] "file:///C:/CasparCG/Server/media/text.html?text=$SCORE$&top=0&left=657&size=99" CUT 1 Linear RIGHT
+Score4=PLAY 1-511 [HTML] "file:///C:/CasparCG/Server/media/text.html?text=$SCORE$&top=0&left=875&size=99" CUT 1 Linear RIGHT
+Finalist1=PLAY 1-731 "ASSET LED/HABILLAGE_CENTRAL/FINALISTE_JAUGE"
+Finalist2=PLAY 1-732 "ASSET LED/HABILLAGE_CENTRAL/FINALISTE_JAUGE"
+Finalist3=PLAY 1-733 "ASSET LED/HABILLAGE_CENTRAL/FINALISTE_JAUGE"
+Finalist4=PLAY 1-734 "ASSET LED/HABILLAGE_CENTRAL/FINALISTE_JAUGE"
+Winner1=PLAY 1-731 "ASSET LED/HABILLAGE_CENTRAL/VAINQUEUR_JAUGE"
+Winner2=PLAY 1-732 "ASSET LED/HABILLAGE_CENTRAL/VAINQUEUR_JAUGE" 
+Winner3=PLAY 1-733 "ASSET LED/HABILLAGE_CENTRAL/VAINQUEUR_JAUGE" 
+Winner4=PLAY 1-734 "ASSET LED/HABILLAGE_CENTRAL/VAINQUEUR_JAUGE" 

@@ -40,12 +40,12 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
     private $sent = false;
     private $actionsfile = array();
     private $lastresults = array();
-    private $matchpoints = 20;
+    private $matchpoints = 150;
     private $matchStarted = false;
     private $nbCheckpoints = 0;
 
     public function __construct() {
-        $this->address = "25.101.108.111";
+        $this->address = "192.168.1.164";
         $this->port = 5250;
         if (!$this->connectSocket()) {
             Logger::log("The socket could not be created.");
@@ -101,7 +101,7 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
 
         // Settings
         $this->maniaControl->getSettingManager()->initSetting($this, self::SETTING_CASPARCG_ACTIVATED, true);
-        $this->maniaControl->getSettingManager()->initSetting($this, self::SETTING_CASPARCG_ACTIONSFILE, 'D:\PhpstormProjects\ManiaControl2\CasparCG.txt');
+        $this->maniaControl->getSettingManager()->initSetting($this, self::SETTING_CASPARCG_ACTIONSFILE, '/home/drakonia/ManiaControl/CasparCG.txt');
 
         $this->connector = new CasparCGPlugin(); // all communication to the server will now be done through this object
 
@@ -160,6 +160,9 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
                 if (strpos($actionname, 'Checkpoint') !== false) {
                     $action = str_replace('$PERCENT$', $variable, $action);
                 }
+                if (strpos($actionname, 'CPCar') !== false) {
+                    $action = str_replace('$END$', $variable, $action);
+                }
                 if (strpos($actionname, 'Score') !== false) {
                     $action = str_replace('$SCORE$', $variable, $action);
                 }
@@ -192,6 +195,8 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
             $this->sendActiontoCASPARCG("Checkpoint02");
             $this->sendActiontoCASPARCG("Checkpoint03");
             $this->sendActiontoCASPARCG("Checkpoint04");
+            $this->sendActiontoCASPARCG("Background");
+            $this->sendActiontoCASPARCG("WarmUp1");
         }else{
             $this->matchStarted = false;
         }
@@ -209,10 +214,16 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
         if ($this->matchStarted) {
             $this->firstfinish = true;
             $this->sent = true;
+            
+            $this->sendActiontoCASPARCG("WarmUp2");
             $this->sendActiontoCASPARCG("Checkpoint1", 0);
             $this->sendActiontoCASPARCG("Checkpoint2", 0);
             $this->sendActiontoCASPARCG("Checkpoint3", 0);
             $this->sendActiontoCASPARCG("Checkpoint4", 0);
+            $this->sendActiontoCASPARCG("ClearCP1");
+            $this->sendActiontoCASPARCG("ClearCP2");
+            $this->sendActiontoCASPARCG("ClearCP3");
+            $this->sendActiontoCASPARCG("ClearCP4");
             $this->sendActiontoCASPARCG("FeuRouge1");
             $this->sendActiontoCASPARCG("FeuRouge2");
             $this->sendActiontoCASPARCG("FeuOrange1");
@@ -221,13 +232,22 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
             $this->sendActiontoCASPARCG("FeuVert2");
 
             $this->maniaControl->getTimerManager()->registerOneTimeListening($this, function () use (&$player) {
+                $this->sendActiontoCASPARCG("Start1");
+                
+            }, 2800);
+
+            $this->maniaControl->getTimerManager()->registerOneTimeListening($this, function () use (&$player) {
                 $this->sendActiontoCASPARCG("FeuRouge3");
                 $this->sendActiontoCASPARCG("FeuRouge4");
                 $this->sendActiontoCASPARCG("FeuOrange3");
                 $this->sendActiontoCASPARCG("FeuOrange4");
                 $this->sendActiontoCASPARCG("FeuVert3");
                 $this->sendActiontoCASPARCG("FeuVert4");
-            }, 5000);
+            }, 4000);
+
+            $this->maniaControl->getTimerManager()->registerOneTimeListening($this, function () use (&$player) {
+                $this->sendActiontoCASPARCG("Start2");
+            }, 7500);
         }
     }
 
@@ -235,27 +255,38 @@ class CasparCGPlugin implements CallbackListener, TimerListener, Plugin {
     {
         if ($this->matchStarted) {
 
+            $length = round(1800/($this->nbCheckpoints),0);
+            
             $currentCheckpoint = ($structure->getCheckPointInRace() + 1);
             $percentage = round(($currentCheckpoint / $this->nbCheckpoints)*100,1);
+            $percentage2 = round((($currentCheckpoint -1) / $this->nbCheckpoints)*100,1);
             $login = $structure->getLogin();
             $action = "";
             switch (trim($login)) {
                 case trim($this->actionsfile['Player1']):
                     $action = "Checkpoint1";
+                    $action2 = "CPCar1";
                     break;
                 case trim($this->actionsfile['Player2']):
                     $action = "Checkpoint2";
+                    $action2 = "CPCar2";
                     break;
                 case trim($this->actionsfile['Player3']):
                     $action = "Checkpoint3";
+                    $action2 = "CPCar3";
                     break;
                 case trim($this->actionsfile['Player4']):
                     $action = "Checkpoint4";
+                    $action2 = "CPCar4";
                     break;
             }
 
+            $endlength = "LENGTH ".$length . " SEEK ".round(($percentage2*18),0) ." ";
             //Logger::log("Action: " . $action);
             $this->sendActiontoCASPARCG($action, $percentage);
+            $this->sendActiontoCASPARCG($action2, $endlength);
+            
+            
         }
     }
 
